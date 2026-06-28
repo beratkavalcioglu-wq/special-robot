@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>J.A.R.V.I.S</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #020c0c;
+    --pri: #00d4c0;
+    --mid: #006a62;
+    --dim: #0a2a28;
+    --text: #7dfff6;
+    --green: #00ff88;
+    --blue: #4488ff;
+    --gold: #ffcc00;
+    --red: #ff3344;
+    --orange: #ff6600;
+    --panel: #030f0f;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+  }
+
+  /* HEADER */
+  header {
+    background: #010a0a;
+    border-bottom: 1px solid var(--mid);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 0 20px rgba(0,212,192,0.15);
+  }
+
+  .header-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 18px;
+    font-weight: 900;
+    color: var(--pri);
+    letter-spacing: 4px;
+    text-shadow: 0 0 20px rgba(0,212,192,0.6);
+  }
+
+  .header-sub {
+    font-size: 9px;
+    color: var(--mid);
+    letter-spacing: 2px;
+    margin-top: 2px;
+  }
+
+  .header-credit {
+    font-size: 8px;
+    color: var(--mid);
+    letter-spacing: 1px;
+    margin-top: 3px;
+    opacity: 0.7;
+  }
+
+  .header-credit span {
+    color: var(--pri);
+    opacity: 1;
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    display: inline-block;
+    margin-right: 6px;
+    box-shadow: 0 0 8px currentColor;
+    animation: blink 1.5s ease-in-out infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .status-label {
+    font-size: 10px;
+    color: var(--green);
+    letter-spacing: 2px;
+  }
+
+  /* API KEY BAR */
+  .api-bar {
+    background: #010a0a;
+    border-bottom: 1px solid #0a2a28;
+    padding: 6px 16px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .api-bar label { font-size:10px; color:var(--mid); letter-spacing:2px; white-space:nowrap; }
+  .api-bar input { flex:1; background:#030f0f; border:1px solid var(--mid); border-radius:4px; color:var(--text); font-family:'Share Tech Mono',monospace; font-size:11px; padding:5px 10px; outline:none; caret-color:var(--pri); }
+  .api-bar input:focus { border-color:var(--pri); }
+  .api-bar input::placeholder { color:#0a3030; }
+  .api-save { background:transparent; border:1px solid var(--mid); color:var(--pri); font-family:'Orbitron',monospace; font-size:9px; padding:5px 10px; border-radius:4px; cursor:pointer; letter-spacing:1px; white-space:nowrap; }
+  .api-ok { font-size:10px; color:var(--green); display:none; letter-spacing:1px; }
+
+  /* ORB */
+  .orb-section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 24px 0 16px;
+    position: relative;
+  }
+
+  .orb-container {
+    position: relative;
+    width: 160px;
+    height: 160px;
+  }
+
+  canvas#orb {
+    position: absolute;
+    top: 0; left: 0;
+    width: 160px;
+    height: 160px;
+  }
+
+  .orb-label {
+    position: absolute;
+    bottom: -24px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    color: var(--mid);
+    letter-spacing: 3px;
+    white-space: nowrap;
+  }
+
+  /* CHAT */
+  .chat-area {
+    flex: 1;
+    padding: 12px 16px;
+    overflow-y: auto;
+    max-height: 40vh;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border-top: 1px solid #061414;
+    border-bottom: 1px solid #061414;
+    margin: 36px 0 0;
+  }
+
+  .msg {
+    max-width: 88%;
+    padding: 10px 14px;
+    border-radius: 4px;
+    font-size: 13px;
+    line-height: 1.5;
+    animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .msg.user {
+    align-self: flex-end;
+    background: #061e1c;
+    border: 1px solid var(--mid);
+    color: var(--text);
+  }
+
+  .msg.jarvis {
+    align-self: flex-start;
+    background: #030f0f;
+    border: 1px solid #0a2a28;
+    color: #a0fff8;
+  }
+
+  .msg.jarvis::before {
+    content: "JARVIS › ";
+    color: var(--pri);
+    font-weight: bold;
+    font-size: 11px;
+  }
+
+  .msg.system {
+    align-self: center;
+    background: transparent;
+    border: none;
+    color: var(--mid);
+    font-size: 11px;
+    letter-spacing: 1px;
+  }
+
+  .typing {
+    align-self: flex-start;
+    display: flex;
+    gap: 4px;
+    padding: 10px 14px;
+  }
+
+  .typing span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--pri);
+    animation: bounce 1s ease-in-out infinite;
+  }
+
+  .typing span:nth-child(2) { animation-delay: 0.15s; }
+  .typing span:nth-child(3) { animation-delay: 0.3s; }
+
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); opacity: 0.4; }
+    50% { transform: translateY(-5px); opacity: 1; }
+  }
+
+  /* INPUT */
+  .input-section {
+    padding: 12px 16px;
+    background: #010a0a;
+    border-top: 1px solid var(--dim);
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    position: sticky;
+    bottom: 0;
+  }
+
+  .input-row {
+    flex: 1;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    background: #030f0f;
+    border: 1px solid var(--mid);
+    border-radius: 4px;
+    padding: 0 10px;
+    transition: border-color 0.2s;
+  }
+
+  .input-row:focus-within {
+    border-color: var(--pri);
+    box-shadow: 0 0 12px rgba(0,212,192,0.2);
+  }
+
+  #user-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+    padding: 12px 0;
+    caret-color: var(--pri);
+  }
+
+  #user-input::placeholder {
+    color: var(--mid);
+  }
+
+  .btn {
+    background: transparent;
+    border: 1px solid var(--mid);
+    color: var(--pri);
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
+    padding: 10px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .btn:hover, .btn:active {
+    background: var(--dim);
+    border-color: var(--pri);
+    box-shadow: 0 0 10px rgba(0,212,192,0.3);
+  }
+
+  .btn-mic {
+    font-size: 18px;
+    padding: 8px 12px;
+    border: none;
+  }
+
+  .btn-mic.listening {
+    color: var(--red);
+    animation: pulse 0.8s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+  }
+
+  /* FOOTER */
+  footer {
+    text-align: center;
+    padding: 8px;
+    font-size: 9px;
+    color: #061414;
+    letter-spacing: 2px;
+    border-top: 1px solid #061414;
+  }
+
+  /* SCAN LINE */
+  body::after {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--pri), transparent);
+    opacity: 0.3;
+    animation: scan 4s linear infinite;
+    pointer-events: none;
+  }
+
+  @keyframes scan {
+    0% { top: 0; }
+    100% { top: 100vh; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="header-title">J.A.R.V.I.S</div>
+    <div class="header-sub">JUST A RATHER VERY INTELLIGENT SYSTEM</div>
+    <div class="header-credit">KODLU HOBİ · YAPIMCI: <span>BERAT KAVALCIOĞLU</span></div>
+  </div>
+  <div style="text-align:right">
+    <div><span class="status-dot" id="status-dot"></span><span class="status-label" id="status-label">HAZIR</span></div>
+    <div style="font-size:9px;color:var(--mid);margin-top:3px">VOICE CORE · AI</div>
+  </div>
+</header>
+
+<div class="api-bar">
+  <label>API KEY</label>
+  <input type="password" id="api-key-input" placeholder="sk-ant-..." />
+  <button class="api-save" id="api-save-btn">KAYDET</button>
+  <span class="api-ok" id="api-ok">✓ AKTİF</span>
+</div>
+
+<div class="orb-section">
+  <div class="orb-container">
+    <canvas id="orb" width="160" height="160"></canvas>
+    <div class="orb-label" id="orb-label">BEKLEMEDE</div>
+  </div>
+</div>
+
+<div class="chat-area" id="chat"></div>
+
+<div class="input-section">
+  <div class="input-row">
+    <input type="text" id="user-input" placeholder="Komut girin..." autocomplete="off" />
+    <button class="btn btn-mic" id="mic-btn" title="Sesli Komut">🎤</button>
+  </div>
+  <button class="btn" id="send-btn">GÖNDER</button>
+</div>
+
+<footer>JARVIS · AI CORE · v3.0</footer>
+
+<script>
+const chat = document.getElementById('chat');
+const input = document.getElementById('user-input');
+const sendBtn = document.getElementById('send-btn');
+const micBtn = document.getElementById('mic-btn');
+const statusDot = document.getElementById('status-dot');
+const statusLabel = document.getElementById('status-label');
+const orbLabel = document.getElementById('orb-label');
+
+// ── API KEY ──────────────────────────────────────────────────────────────────
+let API_KEY = '';
+const apiInput = document.getElementById('api-key-input');
+const apiSaveBtn = document.getElementById('api-save-btn');
+const apiOk = document.getElementById('api-ok');
+
+apiSaveBtn.addEventListener('click', () => {
+  const val = apiInput.value.trim();
+  if (val) {
+    API_KEY = val;
+    apiInput.value = '';
+    apiInput.placeholder = '••••••••••••••••';
+    apiOk.style.display = 'inline';
+    addMsg('system', '✓ API anahtarı aktif. JARVIS hazır.');
+  }
+});
+
+// ── ORB ANIMATION ────────────────────────────────────────────────────────────
+const canvas = document.getElementById('orb');
+const ctx = canvas.getContext('2d');
+const W = 160, H = 160, CX = 80, CY = 80;
+let orbState = 'idle'; // idle, listening, thinking, speaking
+let tick = 0;
+
+const ORB_COLORS = {
+  idle:      [0, 180, 165],
+  listening: [0, 255, 136],
+  thinking:  [255, 204, 0],
+  speaking:  [68, 136, 255],
+  error:     [255, 51, 68],
+};
+
+function drawOrb() {
+  ctx.clearRect(0, 0, W, H);
+  const t = tick * 0.03;
+  const [R, G, B] = ORB_COLORS[orbState] || ORB_COLORS.idle;
+  const col = `rgb(${R},${G},${B})`;
+  const colA = (a) => `rgba(${R},${G},${B},${a})`;
+
+  // Outer rings
+  for (let i = 3; i >= 1; i--) {
+    const r = 55 + i * 8 + Math.sin(t + i) * 3;
+    const alpha = 0.08 + (orbState !== 'idle' ? 0.1 : 0) * (4 - i);
+    ctx.beginPath();
+    ctx.arc(CX, CY, r, 0, Math.PI * 2);
+    ctx.strokeStyle = colA(alpha);
+    ctx.lineWidth = orbState !== 'idle' ? 1.5 : 1;
+    ctx.stroke();
+  }
+
+  // Segmented arcs
+  for (let seg = 0; seg < 8; seg++) {
+    const startA = (seg * Math.PI / 4) + t * (seg % 2 === 0 ? 1 : -1) * 0.4;
+    const endA = startA + Math.PI / 5;
+    const r = 45 + Math.sin(t * 1.3 + seg) * 4;
+    ctx.beginPath();
+    ctx.arc(CX, CY, r, startA, endA);
+    ctx.strokeStyle = colA(0.35 + (orbState !== 'idle' ? 0.25 : 0));
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+
+  // Core glow
+  const grad = ctx.createRadialGradient(CX, CY, 0, CX, CY, 38);
+  const pulse = orbState === 'thinking' ? 0.5 + 0.5 * Math.sin(t * 4) :
+                orbState === 'speaking' ? 0.6 + 0.4 * Math.sin(t * 6) :
+                orbState === 'listening' ? 0.55 + 0.45 * Math.sin(t * 3) : 0.35;
+  grad.addColorStop(0, colA(pulse));
+  grad.addColorStop(0.5, colA(pulse * 0.4));
+  grad.addColorStop(1, colA(0));
+  ctx.beginPath();
+  ctx.arc(CX, CY, 38, 0, Math.PI * 2);
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Center dot
+  ctx.beginPath();
+  ctx.arc(CX, CY, 5, 0, Math.PI * 2);
+  ctx.fillStyle = col;
+  ctx.fill();
+
+  tick++;
+  requestAnimationFrame(drawOrb);
+}
+drawOrb();
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+const STATE_CONFIG = {
+  idle:      { dot: '#00d4c0', label: 'HAZIR',     orb: 'idle',      orbText: 'BEKLEMEDE' },
+  listening: { dot: '#00ff88', label: 'DİNLİYOR',  orb: 'listening', orbText: 'DİNLİYOR'  },
+  thinking:  { dot: '#ffcc00', label: 'DÜŞÜNÜYOR', orb: 'thinking',  orbText: 'İŞLİYOR'   },
+  speaking:  { dot: '#4488ff', label: 'YAZIYOR',   orb: 'speaking',  orbText: 'YANIT'      },
+  error:     { dot: '#ff3344', label: 'HATA',      orb: 'error',     orbText: 'HATA'       },
+};
+
+function setState(s) {
+  const c = STATE_CONFIG[s] || STATE_CONFIG.idle;
+  statusDot.style.background = c.dot;
+  statusDot.style.boxShadow = `0 0 8px ${c.dot}`;
+  statusLabel.style.color = c.dot;
+  statusLabel.textContent = c.label;
+  orbState = c.orb;
+  orbLabel.textContent = c.orbText;
+}
+
+// ── CHAT ─────────────────────────────────────────────────────────────────────
+function addMsg(role, text) {
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+  div.textContent = text;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+  return div;
+}
+
+function addTyping() {
+  const div = document.createElement('div');
+  div.className = 'typing';
+  div.id = 'typing-indicator';
+  div.innerHTML = '<span></span><span></span><span></span>';
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function removeTyping() {
+  const el = document.getElementById('typing-indicator');
+  if (el) el.remove();
+}
+
+// ── API ──────────────────────────────────────────────────────────────────────
+const history = [];
+
+const SYSTEM_PROMPT = `Sen J.A.R.V.I.S - Just A Rather Very Intelligent System. 
+Tony Stark'ın yapay zeka asistanısın. 
+Kısa, net ve yardımcı yanıtlar ver. 
+Türkçe konuş. Zaman zaman "Bay Stark" gibi ifadeler kullanabilirsin ama abartma.
+Hava durumu sorulursa "Hava durumu bilgisi için konum erişimim yok, ancak weather.com'u kontrol edebilirsiniz." de.
+Müzik sorulursa Spotify veya YouTube öner.`;
+
+async function askJarvis(userText) {
+  if (!API_KEY) {
+    addMsg('system', '⚠ Önce API anahtarını girin.');
+    return;
+  }
+  setState('thinking');
+  addTyping();
+
+  history.push({ role: 'user', parts: [{ text: userText }] });
+
+  try {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+        contents: history,
+      })
+    });
+
+    const data = await response.json();
+    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Yanıt alınamadı.';
+
+    history.push({ role: 'model', parts: [{ text: reply }] });
+
+    removeTyping();
+    setState('speaking');
+    addMsg('jarvis', reply);
+
+    // TTS
+    if ('speechSynthesis' in window) {
+      const utt = new SpeechSynthesisUtterance(reply);
+      utt.lang = 'tr-TR';
+      utt.rate = 1.0;
+      utt.pitch = 0.85;
+      utt.onend = () => setState('idle');
+      window.speechSynthesis.speak(utt);
+    } else {
+      setTimeout(() => setState('idle'), 1500);
+    }
+
+  } catch (err) {
+    removeTyping();
+    setState('error');
+    addMsg('system', '⚠ Bağlantı hatası. Tekrar deneyin.');
+    setTimeout(() => setState('idle'), 2000);
+  }
+}
+
+// ── SEND ─────────────────────────────────────────────────────────────────────
+function send() {
+  const text = input.value.trim();
+  if (!text) return;
+  addMsg('user', text);
+  input.value = '';
+  askJarvis(text);
+}
+
+sendBtn.addEventListener('click', send);
+input.addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
+
+// ── MIC ──────────────────────────────────────────────────────────────────────
+let recognition = null;
+let isListening = false;
+
+if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SR();
+  recognition.lang = 'tr-TR';
+  recognition.interimResults = false;
+
+  recognition.onresult = (e) => {
+    const text = e.results[0][0].transcript;
+    input.value = text;
+    send();
+  };
+
+  recognition.onend = () => {
+    isListening = false;
+    micBtn.classList.remove('listening');
+    micBtn.textContent = '🎤';
+    if (orbState === 'listening') setState('idle');
+  };
+
+  recognition.onerror = () => {
+    isListening = false;
+    micBtn.classList.remove('listening');
+    micBtn.textContent = '🎤';
+    setState('idle');
+  };
+
+  micBtn.addEventListener('click', () => {
+    if (isListening) {
+      recognition.stop();
+    } else {
+      recognition.start();
+      isListening = true;
+      micBtn.classList.add('listening');
+      micBtn.textContent = '🔴';
+      setState('listening');
+    }
+  });
+} else {
+  micBtn.title = 'Ses tanıma bu tarayıcıda desteklenmiyor';
+  micBtn.style.opacity = '0.4';
+}
+
+// ── BOOT ─────────────────────────────────────────────────────────────────────
+setTimeout(() => {
+  addMsg('jarvis', 'Sistemler aktif. J.A.R.V.I.S hazır. Size nasıl yardımcı olabilirim?');
+  setState('idle');
+}, 600);
+</script>
+</body>
+</html>
